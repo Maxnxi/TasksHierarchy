@@ -10,29 +10,49 @@ import Foundation
 //MARK: ->Singelton - Id task
 class TaskIdsSingelton {
     static let shared = TaskIdsSingelton()
-    public var id = [0]
+    private let idsCareTaker = CareTakerIds()
+    public var savedIds: [IdToCare] {
+        didSet {
+            print("new id Added in Singleton", savedIds.last)
+            idsCareTaker.saveIds(ids: savedIds)
+        }
+    }
     
-    private init() {}
+    private init() {
+        savedIds = idsCareTaker.loadIds() ?? []
+    }
     
     public func getId() -> Int {
-        guard let lastId = id.last else {
+        guard let lastId = self.savedIds.last else {
             print("Suddenly found that no base Index in id - TaskIdsSingleton")
-            id.append(0)
-            id.append(1)
+            savedIds.append(IdToCare(id: 0))
+            savedIds.append(IdToCare(id: 1))
             return 1
         }
-        let newId = lastId + 1
-        id.append(newId)
-        return newId
+        let newId = IdToCare(id: (lastId.id + 1))
+        self.savedIds.append(newId)
+        return newId.id
     }
     
     public func destructId(idToDelete: Int) {
-        guard let indexOfDeleting = id.firstIndex(of: idToDelete) else {
-            print("Error with deleting in TaskSingelton")
+        
+        self.removeIdFromArray(id: idToDelete)
+
+    }
+    
+    private func addIdToArray(id: IdToCare) {
+        savedIds.append(id)
+    }
+    
+    private func removeIdFromArray(id: Int) {
+        guard let indTmp = savedIds.firstIndex(where: { $0.id == id
+        }) else {
+            print("Error cannot get index to delete in Singleton")
             return
         }
-        id.remove(at: indexOfDeleting)
+        savedIds.remove(at: indTmp)
     }
+    
 }
 
 //MARK: -> Singelton - to save with Memento
